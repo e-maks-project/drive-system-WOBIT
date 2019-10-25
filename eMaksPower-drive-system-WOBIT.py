@@ -160,32 +160,7 @@ Sp(0x2040,0x02,5)                     # NMT communication Enable
  
 
 # Main loop -------------------------------------------------------------------
-while 1:   
-   Sp(0x3300, 0x00, x_axis_value)     # Set Velocity
-'''
-   Sp(0x3300, 0x00, x_axis_value)
-   if(x_axis_value>=0 and x_axis_value<30):
-      Sp(0x3158,0x00,1)
-      Sp(0x3158,0x01,1)  #Turn on LED yellow
-      #Sp(0x3300,0x00,Desired_position)    # Velocity - desired value
-   elif(x_axis_value>=30 and x_axis_value<75):
-      Sp(0x3158,0x00,1)
-      Sp(0x3158,0x01,2) #Turn on LED orange
-      #Sp(0x3300,0x00,Desired_position)    # Velocity - desired value
-   elif(x_axis_value>=75 and x_axis_value<100):
-      Sp(0x3158,0x00,1)
-      Sp(0x3158,0x01,4) #Turn on LED red
-      #Sp(0x3300,0x00,Desired_position)    # Velocity - desired value
-   elif(x_axis_value< 0):
-      Sp(0x3158,0x00,1)
-      Sp(0x3158,0x01,5) #Turn on LEDs yellow and orange
-      #Sp(0x3300,0x00,0)    # Velocity - desired value
-   else:
-      Sp(0x3158,0x00,1)
-      Sp(0x3158,0x01,7)  #Turn on all LEDs
+while 1:         
+   Sp(0x3300, 0x00, x_axis_value)     # Set Velocity 
 
-      #Sp(0x3300,0x00,0)    # Velocity - desired value
-
-   #Sp(0x3300,0x00,Desired_position)    # Velocity positive- desired value
-  '''
 
