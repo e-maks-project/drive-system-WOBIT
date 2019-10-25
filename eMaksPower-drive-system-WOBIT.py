@@ -1,7 +1,7 @@
 # -*- coding: iso-8859-1 -*-
 #*===========================================================================*#
 #*                                                                           *#
-#* File     : eMaksPower-drive-system-WOBIT                               *#
+#* File     : eMaksPower-drive-system-WOBIT                                  *#
 #*                                                                           *#
 #* Project  : mPLC                                                           *#
 #* System   : MPU2                                                           *#
@@ -9,12 +9,16 @@
 #* Company  : Ko³o Naukowe Robotyków                                         *#
 #*                                                                           *#
 #* Author   : Hubert Graczyk / Piotr Saffarini                               *#
-#* Date     : 17.09.2019                                                     *#
+#* Date     : 25.10.2019                                                     *#
 #*===========================================================================*#
 
-Desired_Velocity = 0    # Joy X position               
-max_velocity_positive = 3000     # Max velocity positive in RPM 
-max_velocity_negative = 1000     # Max velocity positive in RPM  
+DefUserVar(name="x_dir", value = 1, descr ="", min_value=0x00, max_value =0xFF)# X DIR - 0x5101.01h
+DefUserVar(name="x_axis_value", value = 0, descr ="", min_value=0x0, max_value =0xFF)# X Joy position - 0x5101.02h
+
+DefUserVar(name="y_dir", value = 1, descr ="", min_value=0x00, max_value =0xFF)# Y DIR - 0x5102.01h
+DefUserVar(name="y_axis_value", value = 0, descr ="", min_value=0x0, max_value =0xFF)# Y Joy position - 0x5102.02h
+
+
 
 # Configuration Init  -----------------------------------------------------------
 def InitPars():
@@ -49,32 +53,39 @@ def InitPars():
    Sp(0x3910, 0x00, 8)                # MOTOR_PolN
    Sp(0x3911, 0x00, 2)                # MOTOR_Polarity
 
-   Sp(0x3962, 0x00, 2000)             # MOTOR_ENC_Resolution 
-   
-   # Movement parameters ------------------------------------------------------                 
+   Sp(0x3962, 0x00, 2000)             # MOTOR_ENC_Resolution
+
+   # Movement parameters ------------------------------------------------------
+   '''
+   Sp(0x3003, 0x00, 7)                # DEV_Mode - POS mode
+   Sp(0x3300, 0x00, 100)              # Velocity = 500 RPM
+   Sp(0x334C, 0x00, 0)                # Deactivate the ramp generator
+   '''
+
    Sp(0x3003, 0x00, 3)                # DEV_Mode - VEL mode
-   Sp(0x3300, 0x00, 1000)             # Velocity = 1000 RPM 
-   Sp(0x334C, 0x00, 0)                # Deactivate the ramp generator 
-     
+   Sp(0x3304, 0x00, 0x0300)           # Enable Velocity from 0x3300 register
+   Sp(0x3300, 0x00, 0)                # Velocity = 0 RPM
+   Sp(0x334C, 0x00, 0)                # Deactivate the ramp generator
+
    '''
    Sp(0x334C, 0x00, 1)                # Activate the ramp generator
-   Sp(0x3340, 0x00, 2000)             # Acceleration_dV = 2000 RPM 
-   Sp(0x3341, 0x00, 100)              # Acceleration_dT = 100 s                                                          
+   Sp(0x3340, 0x00, 2000)             # Acceleration_dV = 2000 RPM
+   Sp(0x3341, 0x00, 100)              # Acceleration_dT = 100 s
    Sp(0x3342, 0x00, 1000)             # Deceleration_dV = 1000 RPM
-   Sp(0x3343, 0x00, 200)              # Deceleration_dT = 200 s   
-   '''                                                         
-   Sp(0x3321, 0x00, max_velocity_positive)             # Velocity pos. limit = 3000
-   Sp(0x3323, 0x00, max_velocity_negative)             # Velocity neg. limit = 1000
-   
+   Sp(0x3343, 0x00, 200)              # Deceleration_dT = 200 s
+   '''
+
    Sp(0x3004, 0x00, 1)                # DEV_Enable - Enable
-       
+
 # Configuration of CAN frames -------------------------------------------------
 
    Sp(0x2011, 0x02, 1684107116)       # ...tion - Default parameter communication
    Sp(0x2011, 0x05, 1684107116)       # DS2000_RestoreD...000 - Default parameter
 
+   Sp(0x2011, 0x02, 1684107116)       # ...tion - Default parameter communication
+   Sp(0x2011, 0x05, 1684107116)       # DS2000_RestoreD...000 - Default parameter
 
-   # ===== RX CAN CONFIG ===== #
+# ===== RX CAN CONFIG ===== #
    Sp(0x1400, 0x01, 0xC000021D)       # COP_RxPDO1_CommunicationParameter_CobId
    Sp(0x1400, 0x01, 0x4000021D)       # COP_RxPDO1_CommunicationParameter_CobId
 
@@ -84,71 +95,97 @@ def InitPars():
    Sp(0x1402, 0x01, 0xC000030D)       # COP_RxPDO3_CommunicationParameter_CobId
    Sp(0x1402, 0x01, 0x4000030D)       # COP_RxPDO3_CommunicationParameter_CobId
 
-   # ===== RX FRAME DATA ===== #
-   #0x21D
+# ===== RX FRAME DATA ===== #
+   #0x21D - AXIS X
    Sp(0x1600, 0x00, 0x0)              # Disable mapping
-   Sp(0x1600, 0x01, 0x33400020)       # object 0: JOY_ADC_X AXIS in % (2 bytes)
-   Sp(0x1600, 0x00, 0x1)              # Enable mapping with 1 objects
+   Sp(0x1600, 0x01, 0x51010110)       # object 0: DIR: 1-Forward, 0-Rear (2 byte)
+   Sp(0x1600, 0x02, 0x51010210)       # object 1: JOY_ADC_X AXIS Value % (2 bytes)
+   Sp(0x1600, 0x00, 0x2)              # Enable mapping with 3 objects
 
-   #0x22D
-   Sp(0x1601, 0x00, 0x0)              # Disable mapping       
-   Sp(0x1601, 0x01, 0x51010110)       # object 0: JOY_ADC_Y AXIS in % (2 bytes)
-   Sp(0x1601, 0x00, 0x1)              # Enable mapping with 1 objects          
+   #0x22D - AXIS Y
+   Sp(0x1601, 0x00, 0x0)              # Disable mapping
+   Sp(0x1601, 0x01, 0x51020110)       # object 0: DIR: 1-Forward, 0-Rear (2 byte)
+   Sp(0x1601, 0x02, 0x51020210)       # object 1: JOY_ADC_Y AXIS Value % (2 bytes)
+   Sp(0x1601, 0x00, 0x2)              # Enable mapping with 3 objects
 
-   #0x30D
-   Sp(0x1603, 0x00, 0x0)              # Disable mapping
-   Sp(0x1603, 0x01, 0x31580008)       # object 0: LED Enable (1 bytes)
-   Sp(0x1603, 0x02, 0x31580108)       # object 1: LED State (1 bytes)
-   Sp(0x1603, 0x00, 0x2)              # Enable mapping with 2 objects
+   #0x30D - LEDs State
+   Sp(0x1602, 0x00, 0x0)              # Disable mapping
+   Sp(0x1602, 0x01, 0x31580008)       # object 0: LED Enable (1 bytes)
+   Sp(0x1602, 0x02, 0x31580108)       # object 1: LED State (1 bytes)
+   Sp(0x1602, 0x00, 0x2)              # Enable mapping with 2 objects
 
    # ===== TX CAN CONFIG ===== #
-   Sp(0x1800, 0x01, 0xC000011D)       # COP_TxPDO1_CommunicationParameter_CobId
-   Sp(0x1800, 0x01, 0x4000011D)       # COP_TxPDO1_CommunicationParameter_CobId
+   Sp(0x1800, 0x01, 0xC000031D)       # COP_TxPDO1_CommunicationParameter_CobId
+   Sp(0x1800, 0x01, 0x4000031D)       # COP_TxPDO1_CommunicationParameter_CobId
 
-   Sp(0x1801, 0x01, 0xC000012D)       # COP_TxPDO2_CommunicationParameter_CobId
-   Sp(0x1801, 0x01, 0x4000012D)       # COP_TxPDO2_CommunicationParameter_CobId
+   Sp(0x1801, 0x01, 0xC000032D)       # COP_TxPDO2_CommunicationParameter_CobId
+   Sp(0x1801, 0x01, 0x4000032D)       # COP_TxPDO2_CommunicationParameter_CobId
 
-   Sp(0x1802, 0x01, 0xC000013D)       # COP_TxPDO3_CommunicationParameter_CobId
-   Sp(0x1802, 0x01, 0x4000013D)       # COP_TxPDO3_CommunicationParameter_CobId    
-   
-   Sp(0x1803, 0x01, 0xC000014D)       # COP_TxPDO4_CommunicationParameter_CobId
-   Sp(0x1803, 0x01, 0x4000014D)       # COP_TxPDO4_CommunicationParameter_CobId
+   Sp(0x1802, 0x01, 0xC000033D)       # COP_TxPDO3_CommunicationParameter_CobId
+   Sp(0x1802, 0x01, 0x4000033D)       # COP_TxPDO3_CommunicationParameter_CobId
+
+   Sp(0x1803, 0x01, 0xC000034D)       # COP_TxPDO4_CommunicationParameter_CobId
+   Sp(0x1803, 0x01, 0x4000034D)       # COP_TxPDO4_CommunicationParameter_CobId
+
 
    # ===== TX FRAME DATA ===== #
-   #0x11D
+   #0x31D
    Sp(0x1A00, 0x00, 0x0)              # Disable mapping
    Sp(0x1A00, 0x01, 0x31100020)       # object 0: Electronic Voltage [mV](4 bytes)
    Sp(0x1A00, 0x02, 0x31110020)       # object 1: Power Voltage [mV](4 bytes)
    Sp(0x1A00, 0x00, 0x2)              # Enable mapping with 2 objects
 
-   #0x12D
+   #0x32D
    Sp(0x1A01, 0x00, 0x0)              # Disable mapping
    Sp(0x1A01, 0x01, 0x31120020)       # object 0: Motor Voltage [mV] (4 bytes)
    Sp(0x1A01, 0x02, 0x31130020)       # object 1: Motor Current [mA] (4 bytes)
    Sp(0x1A01, 0x00, 0x2)              # Enable mapping with 2 objects
 
-   #0x13D
+   #0x33D
    Sp(0x1A02, 0x00, 0x0)              # Disable mapping
    Sp(0x1A02, 0x01, 0x31140010)       # object 0: Electronic Temperature (2 bytes)
-   Sp(0x1A02, 0x00, 0x1)              # Enable mapping with 1 objects   
-   
-   #0x14D
+   Sp(0x1A02, 0x00, 0x1)              # Enable mapping with 1 objects
+
+   #0x34D
    Sp(0x1A03, 0x00, 0x0)              # Disable mapping
-   Sp(0x1A03, 0x01, 0x33620020)       # object 0: Actual Velocity (4 bytes) 
+   Sp(0x1A03, 0x01, 0x33620020)       # object 0: Actual Velocity (4 bytes)
    Sp(0x1A03, 0x02, 0x37620020)       # object 1: Actual Motor Position (4 bytes)
    Sp(0x1A03, 0x00, 0x2)              # Enable mapping with 2 objects
-
-
-# Main program ================================================================
-InitPars()                                     
-Sp(0x2040,0x02,5)                     # NMT communication Enable   
-if(Desired_velocity>50):
-   Sp(0x3300,0x00,(Desired_velocity-50)/50*max_velocity_positive)    # Velocity positive- desired value
-else:   
-   Sp(0x3300,0x00,(50-Desired_velocity)/50*max_velocity_negative)    # Velocity negative - desired value
+                                                                                  
+                                                                                  
+                                                                                  
+# Main program ----------------------------------------------------------------
+InitPars()
+Sp(0x2040,0x02,5)                     # NMT communication Enable
  
-# Main loop -------------------------------------------------------------------
-while 1:
-   pass
 
+# Main loop -------------------------------------------------------------------
+while 1:   
+   Sp(0x3300, 0x00, x_axis_value)     # Set Velocity
+'''
+   Sp(0x3300, 0x00, x_axis_value)
+   if(x_axis_value>=0 and x_axis_value<30):
+      Sp(0x3158,0x00,1)
+      Sp(0x3158,0x01,1)  #Turn on LED yellow
+      #Sp(0x3300,0x00,Desired_position)    # Velocity - desired value
+   elif(x_axis_value>=30 and x_axis_value<75):
+      Sp(0x3158,0x00,1)
+      Sp(0x3158,0x01,2) #Turn on LED orange
+      #Sp(0x3300,0x00,Desired_position)    # Velocity - desired value
+   elif(x_axis_value>=75 and x_axis_value<100):
+      Sp(0x3158,0x00,1)
+      Sp(0x3158,0x01,4) #Turn on LED red
+      #Sp(0x3300,0x00,Desired_position)    # Velocity - desired value
+   elif(x_axis_value< 0):
+      Sp(0x3158,0x00,1)
+      Sp(0x3158,0x01,5) #Turn on LEDs yellow and orange
+      #Sp(0x3300,0x00,0)    # Velocity - desired value
+   else:
+      Sp(0x3158,0x00,1)
+      Sp(0x3158,0x01,7)  #Turn on all LEDs
+
+      #Sp(0x3300,0x00,0)    # Velocity - desired value
+
+   #Sp(0x3300,0x00,Desired_position)    # Velocity positive- desired value
+  '''
 
