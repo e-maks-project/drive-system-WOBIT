@@ -12,11 +12,11 @@
 #* Date     : 25.10.2019                                                     *#
 #*===========================================================================*#
 
-DefUserVar(name="x_dir", value = 1, descr ="", min_value=0x00, max_value =0xFF)# X DIR - 0x5101.01h
-DefUserVar(name="x_axis_value", value = 0, descr ="", min_value=0x0, max_value =0xFF)# X Joy position - 0x5101.02h
+DefUserVar(name="x_dir", value = 1, descr ="", min_value=0x00, max_value =0xFFFF)# X DIR - 0x5101.01h
+DefUserVar(name="x_axis_value", value = 0, descr ="", min_value=0x0, max_value =0xFFFF)# X Joy position - 0x5101.02h
 
-DefUserVar(name="y_dir", value = 1, descr ="", min_value=0x00, max_value =0xFF)# Y DIR - 0x5102.01h
-DefUserVar(name="y_axis_value", value = 0, descr ="", min_value=0x0, max_value =0xFF)# Y Joy position - 0x5102.02h
+DefUserVar(name="y_dir", value = 1, descr ="", min_value=0x00, max_value =0xFFFF)# Y DIR - 0x5102.01h
+DefUserVar(name="y_axis_value", value = 0, descr ="", min_value=0x0, max_value =0xFFFF)# Y Joy position - 0x5102.02h
 
 
 
@@ -26,17 +26,17 @@ def InitPars():
    Sp(0x3000, 0x00, 0x1)              # DEV_Cmd - Clear error
    Sp(0x3000, 0x00, 0x82)             # DEV_Cmd - Default parameter
 
-   Sp(0x3221, 0x00, 40000)            # CURR_LimitMaxPos
-   Sp(0x3223, 0x00, 40000)            # CURR_LimitMaxNeg
-   Sp(0x3224, 0x01, 40000)            # CURR_DynLimitPeak
-   Sp(0x3224, 0x02, 40000)            # CURR_DynLimitCont
+   Sp(0x3221, 0x00, 10000)            # CURR_LimitMaxPos
+   Sp(0x3223, 0x00, 10000)            # CURR_LimitMaxNeg
+   Sp(0x3224, 0x01, 10000)            # CURR_DynLimitPeak
+   Sp(0x3224, 0x02, 5000)             # CURR_DynLimitCont
 
-   Sp(0x3240, 0x00, 40000)            # CURR_Acc_dI
-   Sp(0x3241, 0x00, 40000)            # CURR_Acc_dT
-   Sp(0x3242, 0x00, 40000)            # CURR_Dec_dI
-   Sp(0x3243, 0x00, 10)               # CURR_Dec_dT
+   Sp(0x3240, 0x00, 10000)            # CURR_Acc_dI
+   Sp(0x3241, 0x00, 10000)            # CURR_Acc_dT
+   Sp(0x3242, 0x00, 10000)            # CURR_Dec_dI
+   Sp(0x3243, 0x00, 100)              # CURR_Dec_dT
    Sp(0x3244, 0x00, 40000)            # CURR_Dec_QuickStop_dI
-   Sp(0x3245, 0x00, 2)                # CURR_Dec_QuickStop_dT
+   Sp(0x3245, 0x00, 50)               # CURR_Dec_QuickStop_dT
 
    Sp(0x324C, 0x00, 1)                # CURR_RampType
 
@@ -56,16 +56,13 @@ def InitPars():
    Sp(0x3962, 0x00, 2000)             # MOTOR_ENC_Resolution
 
    # Movement parameters ------------------------------------------------------
-   '''
-   Sp(0x3003, 0x00, 7)                # DEV_Mode - POS mode
-   Sp(0x3300, 0x00, 100)              # Velocity = 500 RPM
-   Sp(0x334C, 0x00, 0)                # Deactivate the ramp generator
-   '''
-
    Sp(0x3003, 0x00, 3)                # DEV_Mode - VEL mode
    Sp(0x3304, 0x00, 0x0300)           # Enable Velocity from 0x3300 register
    Sp(0x3300, 0x00, 0)                # Velocity = 0 RPM
    Sp(0x334C, 0x00, 0)                # Deactivate the ramp generator
+   
+   Sp(0x3321, 0x00, 2000)             # VEL_LimitMaxPos - pos. limit = 2000
+   Sp(0x3323, 0x00, 800)              # VEL_LimitMaxNeg - neg. limit = 800
 
    '''
    Sp(0x334C, 0x00, 1)                # Activate the ramp generator
@@ -157,10 +154,15 @@ def InitPars():
 # Main program ----------------------------------------------------------------
 InitPars()
 Sp(0x2040,0x02,5)                     # NMT communication Enable
- 
 
 # Main loop -------------------------------------------------------------------
 while 1:         
-   Sp(0x3300, 0x00, x_axis_value)     # Set Velocity 
-
-
+   Sp(0x3300, 0x00, x_axis_value)     # Set Velocity - odczyt 1:1 
+                      
+''' #Przeskalowane procentowo                       
+   if(x_dir == 1):
+     Sp(0x3300, 0x00, (x_axis_value/100 * Gp(0x3321, 0x00)))     
+     
+   elif(x_dir == 0): 
+     Sp(0x3300, 0x00, (-x_axis_value/100 * Gp(0x3323, 0x00)))
+'''
