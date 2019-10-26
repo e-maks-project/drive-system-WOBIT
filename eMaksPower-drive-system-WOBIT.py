@@ -18,7 +18,8 @@ DefUserVar(name="x_axis_value", value = 0, descr ="", min_value=0x0, max_value =
 DefUserVar(name="y_dir", value = 1, descr ="", min_value=0x00, max_value =0xFFFF)# Y DIR - 0x5102.01h
 DefUserVar(name="y_axis_value", value = 0, descr ="", min_value=0x0, max_value =0xFFFF)# Y Joy position - 0x5102.02h
 
-
+DefUserVar(name="x_precent_value", value = 0, descr ="", min_value=0x0, max_value =0xFF)# X Joy position in precentage scale - 0x5103.01h
+DefUserVar(name="y_precent_value", value = 0, descr ="", min_value=0x0, max_value =0xFF)# Y Joy position in precentage scale - 0x5103.02h
 
 # Configuration Init  -----------------------------------------------------------
 def InitPars():
@@ -60,7 +61,7 @@ def InitPars():
    Sp(0x3304, 0x00, 0x0300)           # Enable Velocity from 0x3300 register
    Sp(0x3300, 0x00, 0)                # Velocity = 0 RPM
    Sp(0x334C, 0x00, 0)                # Deactivate the ramp generator
-   
+
    Sp(0x3321, 0x00, 2000)             # VEL_LimitMaxPos - pos. limit = 2000
    Sp(0x3323, 0x00, 800)              # VEL_LimitMaxNeg - neg. limit = 800
 
@@ -95,16 +96,16 @@ def InitPars():
 # ===== RX FRAME DATA ===== #
    #0x21D - AXIS X
    Sp(0x1600, 0x00, 0x0)              # Disable mapping
-   Sp(0x1600, 0x01, 0x51010110)       # object 0: DIR: 1-Forward, 0-Rear (2 byte)
-   Sp(0x1600, 0x02, 0x51010210)       # object 1: JOY_ADC_X AXIS Value % (2 bytes)
+   Sp(0x1600, 0x01, 0x51010210)       # object 0: JOY_ADC_X AXIS Value % (2 bytes)
+   Sp(0x1600, 0x02, 0x51010110)       # object 1: DIR: 1-Forward, 0-Rear (2 byte)
    Sp(0x1600, 0x00, 0x2)              # Enable mapping with 3 objects
 
    #0x22D - AXIS Y
    Sp(0x1601, 0x00, 0x0)              # Disable mapping
-   Sp(0x1601, 0x01, 0x51020110)       # object 0: DIR: 1-Forward, 0-Rear (2 byte)
-   Sp(0x1601, 0x02, 0x51020210)       # object 1: JOY_ADC_Y AXIS Value % (2 bytes)
+   Sp(0x1601, 0x01, 0x51020210)       # object 0: JOY_ADC_Y AXIS Value % (2 bytes)
+   Sp(0x1601, 0x02, 0x51020110)       # object 1: DIR: 1-Forward, 0-Rear (2 byte)
    Sp(0x1601, 0x00, 0x2)              # Enable mapping with 3 objects
-
+   
    #0x30D - LEDs State
    Sp(0x1602, 0x00, 0x0)              # Disable mapping
    Sp(0x1602, 0x01, 0x31580008)       # object 0: LED Enable (1 bytes)
@@ -148,21 +149,27 @@ def InitPars():
    Sp(0x1A03, 0x01, 0x33620020)       # object 0: Actual Velocity (4 bytes)
    Sp(0x1A03, 0x02, 0x37620020)       # object 1: Actual Motor Position (4 bytes)
    Sp(0x1A03, 0x00, 0x2)              # Enable mapping with 2 objects
-                                                                                  
-                                                                                  
-                                                                                  
+
+
+
 # Main program ----------------------------------------------------------------
 InitPars()
 Sp(0x2040,0x02,5)                     # NMT communication Enable
 
 # Main loop -------------------------------------------------------------------
-while 1:         
-   Sp(0x3300, 0x00, x_axis_value)     # Set Velocity - odczyt 1:1 
-                      
-''' #Przeskalowane procentowo                       
+while 1:
+   x_precent_value = (x_axis_value*128)/65535  #precentage conversion
+   
    if(x_dir == 1):
-     Sp(0x3300, 0x00, (x_axis_value/100 * Gp(0x3321, 0x00)))     
-     
-   elif(x_dir == 0): 
-     Sp(0x3300, 0x00, (-x_axis_value/100 * Gp(0x3323, 0x00)))
+     Sp(0x3300, 0x00, 2*x_precent_value)
+
+   elif(x_dir == 0):
+     Sp(0x3300, 0x00, -2*x_precent_value)
+
+''' #Przeskalowane procentowo
+   if(x_dir == 1):
+     Sp(0x3300, 0x00, (x_precent_value/100 * Gp(0x3321, 0x00)))
+
+   elif(x_dir == 0):
+     Sp(0x3300, 0x00, (-x_precent_value/100 * Gp(0x3323, 0x00)))
 '''
