@@ -28,13 +28,13 @@ def InitPars():
    Sp(0x3000, 0x00, 0x82)             # DEV_Cmd - Default parameter
 
    Sp(0x3221, 0x00, 10000)            # CURR_LimitMaxPos
-   Sp(0x3223, 0x00, 10000)            # CURR_LimitMaxNeg
+   Sp(0x3223, 0x00, 20000)            # CURR_LimitMaxNeg
    Sp(0x3224, 0x01, 10000)            # CURR_DynLimitPeak
    Sp(0x3224, 0x02, 5000)             # CURR_DynLimitCont
 
-   Sp(0x3240, 0x00, 10000)            # CURR_Acc_dI
+   Sp(0x3240, 0x00, 20000)            # CURR_Acc_dI
    Sp(0x3241, 0x00, 10000)            # CURR_Acc_dT
-   Sp(0x3242, 0x00, 10000)            # CURR_Dec_dI
+   Sp(0x3242, 0x00, 20000)            # CURR_Dec_dI
    Sp(0x3243, 0x00, 100)              # CURR_Dec_dT
    Sp(0x3244, 0x00, 40000)            # CURR_Dec_QuickStop_dI
    Sp(0x3245, 0x00, 50)               # CURR_Dec_QuickStop_dT
@@ -62,8 +62,8 @@ def InitPars():
    Sp(0x3300, 0x00, 0)                # Velocity = 0 RPM
    Sp(0x334C, 0x00, 0)                # Deactivate the ramp generator
 
-   Sp(0x3321, 0x00, 2000)             # VEL_LimitMaxPos - pos. limit = 2000
-   Sp(0x3323, 0x00, 800)              # VEL_LimitMaxNeg - neg. limit = 800
+   Sp(0x3321, 0x00, 1500)              # VEL_LimitMaxPos - pos. limit = 600
+   Sp(0x3323, 0x00, 800)              # VEL_LimitMaxNeg - neg. limit = 300
 
    '''
    Sp(0x334C, 0x00, 1)                # Activate the ramp generator
@@ -72,7 +72,12 @@ def InitPars():
    Sp(0x3342, 0x00, 1000)             # Deceleration_dV = 1000 RPM
    Sp(0x3343, 0x00, 200)              # Deceleration_dT = 200 s
    '''
-
+   
+   # PID regulator
+   Sp(0x3310, 0x00, 100)              # VEL_Kp - Kp = 100 
+   Sp(0x3311, 0x00, 0)                # VEL_Ki - Ki = 0
+   Sp(0x3312, 0x00, 100)              # VEL_Kd - Kd = 100       
+   
    Sp(0x3004, 0x00, 1)                # DEV_Enable - Enable
 
 # Configuration of CAN frames -------------------------------------------------
@@ -105,7 +110,7 @@ def InitPars():
    Sp(0x1601, 0x01, 0x51020210)       # object 0: JOY_ADC_Y AXIS Value % (2 bytes)
    Sp(0x1601, 0x02, 0x51020110)       # object 1: DIR: 1-Forward, 0-Rear (2 byte)
    Sp(0x1601, 0x00, 0x2)              # Enable mapping with 3 objects
-   
+
    #0x30D - LEDs State
    Sp(0x1602, 0x00, 0x0)              # Disable mapping
    Sp(0x1602, 0x01, 0x31580008)       # object 0: LED Enable (1 bytes)
@@ -159,17 +164,23 @@ Sp(0x2040,0x02,5)                     # NMT communication Enable
 # Main loop -------------------------------------------------------------------
 while 1:
    x_precent_value = (x_axis_value*128)/65535  #precentage conversion
-   
+   '''
    if(x_dir == 1):
-     Sp(0x3300, 0x00, 2*x_precent_value)
+      Sp(0x3300, 0x00, 2*x_precent_value)
 
    elif(x_dir == 0):
-     Sp(0x3300, 0x00, -2*x_precent_value)
+      Sp(0x3300, 0x00, -2*x_precent_value)
+   '''
 
-''' #Przeskalowane procentowo
+
+   #Przeskalowane procentowo
    if(x_dir == 1):
-     Sp(0x3300, 0x00, (x_precent_value/100 * Gp(0x3321, 0x00)))
+     Sp(0x3300, 0x00, (x_precent_value * Gp(0x3321, 0x00)/100))
 
    elif(x_dir == 0):
-     Sp(0x3300, 0x00, (-x_precent_value/100 * Gp(0x3323, 0x00)))
-'''
+     Sp(0x3300, 0x00, (-x_precent_value * Gp(0x3323, 0x00)/100))
+
+
+
+
+
