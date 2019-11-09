@@ -27,15 +27,15 @@ def InitPars():
    Sp(0x3000, 0x00, 0x1)              # DEV_Cmd - Clear error
    Sp(0x3000, 0x00, 0x82)             # DEV_Cmd - Default parameter
 
-   Sp(0x3221, 0x00, 10000)            # CURR_LimitMaxPos
+   Sp(0x3221, 0x00, 20000)            # CURR_LimitMaxPos
    Sp(0x3223, 0x00, 20000)            # CURR_LimitMaxNeg
-   Sp(0x3224, 0x01, 10000)            # CURR_DynLimitPeak
+   Sp(0x3224, 0x01, 30000)            # CURR_DynLimitPeak
    Sp(0x3224, 0x02, 5000)             # CURR_DynLimitCont
 
-   Sp(0x3240, 0x00, 20000)            # CURR_Acc_dI
+   Sp(0x3240, 0x00, 10000)            # CURR_Acc_dI
    Sp(0x3241, 0x00, 10000)            # CURR_Acc_dT
-   Sp(0x3242, 0x00, 20000)            # CURR_Dec_dI
-   Sp(0x3243, 0x00, 100)              # CURR_Dec_dT
+   Sp(0x3242, 0x00, 10000)            # CURR_Dec_dI
+   Sp(0x3243, 0x00, 10000)            # CURR_Dec_dT
    Sp(0x3244, 0x00, 40000)            # CURR_Dec_QuickStop_dI
    Sp(0x3245, 0x00, 50)               # CURR_Dec_QuickStop_dT
 
@@ -54,16 +54,14 @@ def InitPars():
    Sp(0x3910, 0x00, 8)                # MOTOR_PolN
    Sp(0x3911, 0x00, 2)                # MOTOR_Polarity
 
-   Sp(0x3962, 0x00, 2000)             # MOTOR_ENC_Resolution
-
    # Movement parameters ------------------------------------------------------
    Sp(0x3003, 0x00, 3)                # DEV_Mode - VEL mode
    Sp(0x3304, 0x00, 0x0300)           # Enable Velocity from 0x3300 register
    Sp(0x3300, 0x00, 0)                # Velocity = 0 RPM
    Sp(0x334C, 0x00, 0)                # Deactivate the ramp generator
 
-   Sp(0x3321, 0x00, 1500)              # VEL_LimitMaxPos - pos. limit = 600
-   Sp(0x3323, 0x00, 800)              # VEL_LimitMaxNeg - neg. limit = 300
+   Sp(0x3321, 0x00, 800)              # VEL_LimitMaxPos - pos. limit = 2000
+   Sp(0x3323, 0x00, -800)             # VEL_LimitMaxNeg - neg. limit = 2000
 
    '''
    Sp(0x334C, 0x00, 1)                # Activate the ramp generator
@@ -72,12 +70,16 @@ def InitPars():
    Sp(0x3342, 0x00, 1000)             # Deceleration_dV = 1000 RPM
    Sp(0x3343, 0x00, 200)              # Deceleration_dT = 200 s
    '''
-   
-   # PID regulator
-   Sp(0x3310, 0x00, 100)              # VEL_Kp - Kp = 100 
+
+   # PID Velocity regulator
+   Sp(0x3310, 0x00, 6)                # VEL_Kp - Kp = 6
    Sp(0x3311, 0x00, 0)                # VEL_Ki - Ki = 0
-   Sp(0x3312, 0x00, 100)              # VEL_Kd - Kd = 100       
+   Sp(0x3312, 0x00, 1000)             # VEL_Kd - Kd = 1000 
    
+   # PI Current regulator
+   Sp(0x3210, 0x00, 8)                # CURR_Kp - set factor Kp of the current controller
+   Sp(0x3211, 0x00, 32)               # CURR_Ki - set factor Ki of the current controller
+
    Sp(0x3004, 0x00, 1)                # DEV_Enable - Enable
 
 # Configuration of CAN frames -------------------------------------------------
@@ -174,11 +176,14 @@ while 1:
 
 
    #Przeskalowane procentowo
-   if(x_dir == 1):
+   if(x_dir == 1 and x_precent_value):
      Sp(0x3300, 0x00, (x_precent_value * Gp(0x3321, 0x00)/100))
 
-   elif(x_dir == 0):
-     Sp(0x3300, 0x00, (-x_precent_value * Gp(0x3323, 0x00)/100))
+   elif(x_dir == 0 and x_precent_value >=30):
+     Sp(0x3300, 0x00, (x_precent_value * Gp(0x3323, 0x00)/100))
+     
+   else:
+     Sp(0x3300, 0x00, 0) 
 
 
 
