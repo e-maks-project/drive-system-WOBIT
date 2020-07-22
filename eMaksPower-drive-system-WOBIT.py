@@ -28,8 +28,8 @@ def InitPars():
    Sp(0x3000, 0x00, 0x82)             # DEV_Cmd - Default parameter
 
    # Current Limits
-   Sp(0x3221, 0x00, 35000)            # CURR_LimitMaxPos
-   Sp(0x3223, 0x00, 50000)            # CURR_LimitMaxNeg
+   Sp(0x3221, 0x00, 65000)            # CURR_LimitMaxPos
+   Sp(0x3223, 0x00, 65000)            # CURR_LimitMaxNeg
 
    # Current Ramp deactivate
    #Sp(0x324C, 0x00, 0)                # CURR_RampType deactivate
@@ -69,7 +69,7 @@ def InitPars():
    Sp(0x3300, 0x00, 0)                # Velocity = 0 RPM
 
    # Velocity Limits
-   Sp(0x3321, 0x00, 1200)             # VEL_LimitMaxPos - pos. limit = 1000
+   Sp(0x3321, 0x00, 100)             # VEL_LimitMaxPos - pos. limit = 1000
    Sp(0x3323, 0x00, -600)            # VEL_LimitMaxNeg - neg. limit = -1000
 
    # Velocity Ramp deactivate
@@ -94,9 +94,9 @@ def InitPars():
    # Velocity and Current regulators ------------------------------------------
 
    # PID Velocity regulator
-   Sp(0x3310, 0x00, 1500)             # VEL_Kp - Kp = 6
-   Sp(0x3311, 0x00, 0)                # VEL_Ki - Ki = 0
-   Sp(0x3312, 0x00, 0)                # VEL_Kd - Kd = 1000
+   Sp(0x3310, 0x00, 290)             # VEL_Kp - Kp = 300
+   Sp(0x3311, 0x00, 80)               # VEL_Ki - Ki = 60
+   Sp(0x3312, 0x00, 100)               # VEL_Kd - Kd = 80
 
    # PI Current regulator
    Sp(0x3210, 0x00, 50)               # CURR_Kp - set factor Kp of the current controller
@@ -141,17 +141,17 @@ def InitPars():
    Sp(0x1602, 0x00, 0x2)              # Enable mapping with 2 objects
 
    # ===== TX CAN CONFIG ===== #
-   Sp(0x1800, 0x01, 0xC000031D)       # COP_TxPDO1_CommunicationParameter_CobId
-   Sp(0x1800, 0x01, 0x4000031D)       # COP_TxPDO1_CommunicationParameter_CobId
+   Sp(0x1800, 0x01, 0xC000011D)       # COP_TxPDO1_CommunicationParameter_CobId
+   Sp(0x1800, 0x01, 0x4000011D)       # COP_TxPDO1_CommunicationParameter_CobId
 
-   Sp(0x1801, 0x01, 0xC000032D)       # COP_TxPDO2_CommunicationParameter_CobId
-   Sp(0x1801, 0x01, 0x4000032D)       # COP_TxPDO2_CommunicationParameter_CobId
+   Sp(0x1801, 0x01, 0xC000012D)       # COP_TxPDO2_CommunicationParameter_CobId
+   Sp(0x1801, 0x01, 0x4000012D)       # COP_TxPDO2_CommunicationParameter_CobId
 
-   Sp(0x1802, 0x01, 0xC000033D)       # COP_TxPDO3_CommunicationParameter_CobId
-   Sp(0x1802, 0x01, 0x4000033D)       # COP_TxPDO3_CommunicationParameter_CobId
+   Sp(0x1802, 0x01, 0xC000013D)       # COP_TxPDO3_CommunicationParameter_CobId
+   Sp(0x1802, 0x01, 0x4000013D)       # COP_TxPDO3_CommunicationParameter_CobId
 
-   Sp(0x1803, 0x01, 0xC000034D)       # COP_TxPDO4_CommunicationParameter_CobId
-   Sp(0x1803, 0x01, 0x4000034D)       # COP_TxPDO4_CommunicationParameter_CobId
+   Sp(0x1803, 0x01, 0xC000014D)       # COP_TxPDO4_CommunicationParameter_CobId
+   Sp(0x1803, 0x01, 0x4000014D)       # COP_TxPDO4_CommunicationParameter_CobId
 
 
    # ===== TX FRAME DATA ===== #
@@ -174,7 +174,7 @@ def InitPars():
 
    #0x34D
    Sp(0x1A03, 0x00, 0x0)              # Disable mapping
-   Sp(0x1A03, 0x01, 0x33620020)       # object 0: Actual Velocity (4 bytes)
+   Sp(0x1A03, 0x01, 0x33000020)       # object 0: Actual Velocity (4 bytes)
    Sp(0x1A03, 0x02, 0x37620020)       # object 1: Actual Motor Position (4 bytes)
    Sp(0x1A03, 0x00, 0x2)              # Enable mapping with 2 objects
 
@@ -189,18 +189,18 @@ while 1:
    x_precent_value = (x_axis_value*128)/65535  #precentage conversion
 
    # Drive forward
-   if(x_dir == 1 and (x_precent_value > 10)):
+   if(x_dir == 1 and (x_precent_value > 15) and (115*x_precent_value/100 * Gp(0x3323, 0x00)/100)<Gp(0x3362, 0x00)):
      Sp(0x3004, 0x00, 1)                # DEV_Enable - Enable
      Sp(0x3300, 0x00, (115*x_precent_value/100 * Gp(0x3323, 0x00)/100))
 
    # Drive backwards
-   elif(x_dir == 0 and (x_precent_value > 10)):
+   elif(x_dir == 0 and (x_precent_value > 15)):
      Sp(0x3004, 0x00, 1)                # DEV_Enable - Enable
      Sp(0x3300, 0x00, (130*x_precent_value/100 * Gp(0x3321, 0x00)/100))
 
    # Stop
-   #elif(x_precent_value < 15 and (Gp(0x3361, 0x00)<50 and Gp(0x3361, 0x00)>-50)):  
-   elif(x_precent_value < 10 and Gp(0x3361, 0x00)<50 and Gp(0x3361, 0x00)>-50):
+   #elif(x_precent_value < 15 and (Gp(0x3361, 0x00)<50 and Gp(0x3361, 0x00)>-50)):
+   elif(x_precent_value < 15 and Gp(0x3362, 0x00)<50):
      Sp(0x3300, 0x00, 0)
      Sp(0x3004, 0x00, 0)                # DEV_Enable - Disable
 
